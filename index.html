@@ -1,155 +1,123 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>蚤激安寄賣小舖</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>測試：固定 X，Y 可動</title>
   <style>
-    body {
-      margin: 0;
-      display: grid;
-      grid-template-columns: 200px 1fr 250px;
-      height: 100vh;
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
       font-family: Arial, sans-serif;
-      overflow: hidden;
+      display:grid;
+      grid-template-columns:200px 1fr 250px;
+      height:100vh;
+      overflow:hidden;
     }
-
-    /* 左側選單區 */
-    nav {
-      background-color: #f0f0f0;
-      padding: 1em;
-      border-right: 1px solid #ccc;
+    nav{background:#f0f0f0;padding:12px;border-right:1px solid #ccc}
+    aside{background:#fafafa;padding:12px;border-left:1px solid #ccc;overflow:auto}
+    main{position:relative;overflow:hidden}
+    /* 這個是我們要移動的 wrapper（把 transform 套在這裡） */
+    .movable {
+      position:absolute;
+      left:0;
+      top:0;
+      width:4000px;   /* 讓內容足夠寬 */
+      height:4000px;  /* 讓內容足夠高 */
+      transform-origin:0 0;
+      will-change:transform;
     }
-
-    nav a {
-      display: block;
-      margin: 10px 0;
-      text-decoration: none;
-      color: #333;
+    .movable iframe {
+      display:block;
+      width:100%;
+      height:100%;
+      border:0;
     }
-
-    /* 中間主內容 */
-    main {
-      position: relative;
-      overflow: hidden;
+    /* 手機：取消裁切，讓 iframe 正常顯示 */
+    @media (max-width:768px){
+      body{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto;overflow:auto}
+      nav{border-bottom:1px solid #ccc}
+      aside{border-top:1px solid #ccc}
+      main{height:auto;overflow:visible}
+      .movable{position:relative;width:100%;height:80vh;transform:none!important}
+      .movable iframe{width:100%;height:100%}
     }
-
-    /* 裁切容器 */
-    .frame-wrap {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      cursor: grab;
+    /* 測試按鈕（可刪） */
+    .tester{
+      position:fixed; right:12px; top:12px; z-index:9999;
+      background:rgba(0,0,0,0.6); color:#fff; padding:8px; border-radius:6px; font-size:13px;
     }
-
-    /* 內嵌網頁（iframe） */
-    .frame-inner {
-      width: 2000px;
-      height: 2000px;
-      border: none;
-      transform-origin: 0 0;
-      display: block;
-      will-change: transform;
-    }
-
-    /* 右側廣告區 */
-    aside {
-      background-color: #fafafa;
-      padding: 1em;
-      border-left: 1px solid #ccc;
-      overflow-y: auto;
-    }
-
-    .ad-box {
-      background-color: #e0e0e0;
-      padding: 10px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    /* 📱 手機版建議設定：不裁切、完整顯示 */
-    @media (max-width: 768px) {
-      body {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr auto;
-        height: auto;
-        overflow: auto;
-      }
-
-      nav {
-        border-right: none;
-        border-bottom: 1px solid #ccc;
-      }
-
-      aside {
-        border-left: none;
-        border-top: 1px solid #ccc;
-      }
-
-      main {
-        overflow: visible;
-        height: auto;
-      }
-
-      .frame-wrap {
-        position: relative;
-        height: 70vh; /* 手機顯示 70% 視窗高度 */
-      }
-
-      .frame-inner {
-        width: 100%;
-        height: 100%;
-        transform: none !important; /* 不裁切 */
-      }
-    }
+    .tester button{margin:4px; padding:6px 8px}
   </style>
 </head>
 <body>
   <nav>
-    <h3>網站導覽</h3>
-    <a href="https://www.google.com" target="_blank">Google</a>
-    <a href="https://www.youtube.com" target="_blank">YouTube</a>
-    <a href="https://www.jljh.com.tw/">嘉隆首頁</a>
+    <h3>導航</h3>
+    <a href="#">link</a>
   </nav>
 
   <main>
-    <div class="frame-wrap" id="frameWrap">
-      <iframe
-        id="theFrame"
-        class="frame-inner"
-        src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg="
-        title="嘉隆二手區"
-        scrolling="no">
-      </iframe>
+    <!-- 我們把 iframe 放在 .movable 裡面，並移動 .movable -->
+    <div class="movable" id="movable">
+      <iframe id="theIframe" src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=" title="測試"></iframe>
     </div>
   </main>
 
   <aside>
-    <h3>廣告區</h3>
-    <div class="ad-box">這裡可以放你的廣告 1</div>
-    <div class="ad-box">這裡可以放你的廣告 2</div>
-    <div class="ad-box">或是 Google AdSense 廣告</div>
+    <h3>廣告</h3>
+    <div>ad</div>
   </aside>
 
+  <!-- 測試用按鈕：左/右/套用 tx（上線後可移除） -->
+  <div class="tester" id="tester">
+    <div>測試 X (固定區間 -2700 ~ -3500)</div>
+    <button id="btnLeft">設 -2700</button>
+    <button id="btnMid">設 -3100</button>
+    <button id="btnRight">設 -3500</button>
+  </div>
 
+  <script>
+    // ---------- 參數（你要的設定） ----------
+    const X_MIN = -3500; // 最左（數值更負）
+    const X_MAX = -2700; // 最右（數值較小）
+    let currentX = -3100; // 預設顯示位置（介於 X_MAX 與 X_MIN）
+    let currentY = -420;  // Y 固定
+
+    const movable = document.getElementById('movable');
+    const iframe = document.getElementById('theIframe');
+
+    function applyTransform() {
+      movable.style.transform = `translate(${currentX}px, ${currentY}px)`;
+      console.log('applied transform', currentX, currentY, getComputedStyle(movable).transform);
+    }
+
+    // 測試按鈕事件
+    document.getElementById('btnLeft').addEventListener('click', () => { currentX = X_MAX; applyTransform(); });
+    document.getElementById('btnMid').addEventListener('click', () => { currentX = Math.round((X_MIN+X_MAX)/2); applyTransform(); });
+    document.getElementById('btnRight').addEventListener('click', () => { currentX = X_MIN; applyTransform(); });
+
+    // 允許 Y 軸 滾輪 / 觸控控制（你要的 Y 可動）
+    let isDragging = false, startY = 0, startTy = currentY;
+    movable.addEventListener('mousedown', (e)=>{ isDragging=true; startY=e.clientY; startTy=currentY; movable.style.cursor='grabbing'; });
+    window.addEventListener('mousemove',(e)=>{ if(!isDragging) return; const d = e.clientY - startY; currentY = startTy + d; applyTransform(); });
+    window.addEventListener('mouseup', ()=>{ isDragging=false; movable.style.cursor='grab'; });
+
+    // 觸控
+    let tStartY=0, tStartTy=currentY;
+    movable.addEventListener('touchstart', (e)=>{ tStartY = e.touches[0].clientY; tStartTy = currentY; }, {passive:true});
+    movable.addEventListener('touchmove', (e)=>{ const d = e.touches[0].clientY - tStartY; currentY = tStartTy + d; applyTransform(); }, {passive:true});
+
+    // 初始化
+    applyTransform();
+
+    // ---------- 快速 debug 指令（在 Console 可執行） ----------
+    // document.getElementById('movable').style.transform = 'translate(-3200px, -420px)';
+    // console.log(getComputedStyle(document.getElementById('movable')).transform);
+
+    // 當 iframe 載入或被阻擋的提示（會在 console 顯示）
+    let loaded=false;
+    iframe.addEventListener('load', ()=>{ loaded=true; console.log('iframe loaded'); });
+    setTimeout(()=>{ if(!loaded) console.warn('iframe 可能被阻擋 (X-Frame-Options/CSP) 或載入緩慢，請查看 Network/Console'); }, 3000);
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
