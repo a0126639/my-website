@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的多區域網站</title>
+  <style>
+    body {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 200px 1fr 250px;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+
+    /* 左側選單區 */
+    nav {
+      background-color: #f0f0f0;
+      padding: 1em;
+      border-right: 1px solid #ccc;
+    }
+
+    nav a {
+      display: block;
+      margin: 10px 0;
+      text-decoration: none;
+      color: #333;
+    }
+
+    /* 中間主內容（iframe） */
+    main {
+      padding: 0;
+      border: none;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 右側廣告區 */
+    aside {
+      background-color: #fafafa;
+      padding: 1em;
+      border-left: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    .ad-box {
+      background-color: #e0e0e0;
+      padding: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h3>網站導覽</h3>
+    <a href="https://www.google.com" target="_blank">Google</a>
+    <a href="https://www.youtube.com" target="_blank">YouTube</a>
+    <a href="https://www.jljh.com.tw/">嘉隆首頁</a>
+  </nav>
+
+  <main>
+    <!-- 將原網站嵌入 -->
+    <iframe src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=" title="嘉隆二手車"></iframe>
+  </main>
+
+  <aside>
+    <h3>廣告區</h3>
+    <div class="ad-box">這裡可以放你的廣告 1</div>
+    <div class="ad-box">這裡可以放你的廣告 2</div>
+    <div class="ad-box">或是 Google AdSense 廣告</div>
+  </aside>
+</body>
+</html>
