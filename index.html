@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>商品區裁切示範</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>商品區（已固定裁切）</title>
   <style>
+    * { box-sizing: border-box; }
+    html,body { height:100%; margin:0; }
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
       display: grid;
       grid-template-columns: 200px 1fr 250px;
@@ -15,64 +16,55 @@
     }
     nav {
       background:#f0f0f0;
-      padding:1em;
+      padding:12px;
       border-right:1px solid #ccc;
     }
-    nav a { display:block; margin:80px 0; color:#333; text-decoration:none; }
+    nav a { display:block; margin:8px 0; color:#333; text-decoration:none; }
     main {
       position: relative;
       background: #fff;
-      overflow: hidden; /* 這裡把多餘部分藏起來 */
-    }
-    /* iframe 會放在 container 裡面，我們用 transform 來移動 */
-    .frame-wrap {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      /* 高度會由 JS 設定為你想要顯示的高度 */
       overflow: hidden;
     }
-    .frame-inner {
-      width: 100%;
-      border: 0;
-      /* 讓 iframe 本身比容器高，方便往上移動裁切 */
-      transform-origin: 0 0;
-      display: block;
-    }
-
     aside {
       background:#fafafa;
-      padding:1em;
+      padding:12px;
       border-left:1px solid #ccc;
       overflow-y:auto;
     }
     .ad-box { background:#e0e0e0; padding:10px; margin-bottom:10px; text-align:center; }
 
-    /* 控制面板 */
-    .panel {
+    /* 裁切容器 */
+    .frame-wrap {
       position: absolute;
-      left: 10px;
-      top: 10px;
-      background: rgba(255,255,255,0.95);
-      border: 1px solid #ddd;
-      padding:8px;
-      border-radius:6px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* iframe 本體 */
+    iframe.frame-inner {
+      width: 100%;
+      height: 4000px; /* 設為大值以免不足；會用 transform 移動顯示正確區域 */
+      border: 0;
+      display: block;
+      transform-origin: 0 0;
+    }
+
+    /* 小提示按鈕 */
+    .topbar {
+      position: absolute;
+      left: 12px;
+      top: 12px;
       z-index: 9999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      width: 360px;
+      background: rgba(255,255,255,0.95);
+      padding:8px 10px;
+      border-radius:6px;
+      border:1px solid #ddd;
+      font-size:13px;
     }
-    .panel h4 { margin:0 0 6px 0; font-size:14px; }
-    .panel label { font-size:13px; display:block; margin-top:6px; }
-    .panel input[type="range"] { width:100%; }
-    .panel .small { font-size:12px; color:#666; margin-top:4px; }
-    .btn {
-      display:inline-block; padding:6px 10px; margin-top:8px;
-      background:#007bff; color:#fff; text-decoration:none; border-radius:4px;
-    }
-    .notice {
-      margin-top:8px; font-size:13px; color:#a00;
-    }
+    .topbar a { color:#007bff; text-decoration:none; margin-right:8px; }
+    #fallback { padding:16px; display:none; }
   </style>
 </head>
 <body>
@@ -84,104 +76,57 @@
   </nav>
 
   <main id="main">
-    <!-- 控制面板（調整用） -->
-    <div class="panel" id="panel">
-      <h4>裁切工具（調整後請記下數值）</h4>
-
-      <label>上移 offset（向上移越多，會顯示更下面的內容）: <span id="offVal">-300</span> px</label>
-      <input id="offsetRange" type="range" min="-1200" max="0" value="-300" step="10">
-
-      <label>視窗顯示高度（view height）: <span id="hVal">800</span> px</label>
-      <input id="heightRange" type="range" min="200" max="2400" value="800" step="10">
-
-      <div class="small">1) 拖拉兩個滑桿直到「只看到紅框商品區」。<br>
-      2) 找到理想數值後，把 <strong>offset</strong> 與 <strong>height</strong> 的數字記下來（或我幫你固定）。</div>
-
-      <a id="applyBtn" class="btn" href="#">套用目前設定</a>
-      <a id="openNewBtn" class="btn" style="background:#28a745; margin-left:8px;" target="_blank" href="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=">在新分頁開啟原站</a>
-
-      <div class="notice" id="notice" style="display:none;"></div>
+    <div class="topbar">
+      已固定裁切：水平 X = -201 px ／ 垂直 Y = -438 px ／ 高度 H = 2000 px
+      &nbsp;|&nbsp;
+      <a href="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=" target="_blank" rel="noopener noreferrer">在新分頁開原站</a>
     </div>
 
-    <!-- iframe 裁切容器 -->
-    <div class="frame-wrap" id="frameWrap" style="height:800px;">
+    <!-- 裁切容器（固定高度 2000px）-->
+    <div class="frame-wrap" id="frameWrap" style="height:2000px;">
       <iframe id="theFrame" class="frame-inner"
         src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg="
         title="嘉隆商品區" scrolling="no"></iframe>
     </div>
 
-    <!-- 備援訊息（若 iframe 被擋） -->
-    <div id="fallback" style="display:none; padding:16px;">
-      <strong>提醒：</strong> 這個網站可能不允許在 iframe 中顯示（或是被瀏覽器阻擋第三方 cookie）。請按「在新分頁開啟原站」來登入或檢視完整內容。
+    <!-- 若 iframe 被阻擋或載入失敗，就顯示備援 -->
+    <div id="fallback">
+      <strong>提醒：</strong> 若中間區域空白，表示該網站不允許嵌入 (X-Frame-Options/CSP) 或被瀏覽器阻擋第三方 cookie。請按上方「在新分頁開原站」開啟原網站。
     </div>
   </main>
 
   <aside>
     <h3>廣告區</h3>
     <div class="ad-box">這裡可以放你的廣告 1</div>
-    <div class="ad-box">這裡可以放你的廣告 2</div>
-    <div class="ad-box">或是 Google AdSense 廣告</div>
+    <div class="ad-box">廣告 2</div>
+    <div class="ad-box">或 Google AdSense</div>
   </aside>
 
   <script>
-    // 元件
-    const offsetRange = document.getElementById('offsetRange');
-    const heightRange = document.getElementById('heightRange');
-    const offVal = document.getElementById('offVal');
-    const hVal = document.getElementById('hVal');
+    // 我把你提供的數值直接寫在這裡
+    const tx = -201;   // 水平位移 px
+    const ty = -438;   // 垂直位移 px
+    const vh = 2000;   // 顯示高度 px
+
     const frameWrap = document.getElementById('frameWrap');
     const theFrame = document.getElementById('theFrame');
-    const notice = document.getElementById('notice');
     const fallback = document.getElementById('fallback');
 
-    // 初始值（可修改）
-    let offset = parseInt(offsetRange.value, 10); // 例如 -300
-    let viewH = parseInt(heightRange.value, 10); // 例如 800
+    // 套用設定
+    frameWrap.style.height = vh + 'px';
+    theFrame.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
 
-    // 更新畫面函式
-    function updateFrame() {
-      offVal.textContent = offset;
-      hVal.textContent = viewH;
-      // 設定可見容器高度（你想顯示的區域高度）
-      frameWrap.style.height = viewH + 'px';
-      // 將 iframe 用 transform translateY 向上移（負值往上）
-      theFrame.style.transform = 'translateY(' + offset + 'px)';
-    }
-
-    // 連動滑桿
-    offsetRange.addEventListener('input', (e) => {
-      offset = parseInt(e.target.value, 10);
-      updateFrame();
-    });
-    heightRange.addEventListener('input', (e) => {
-      viewH = parseInt(e.target.value, 10);
-      updateFrame();
-    });
-
-    // 套用按鈕：把目前數值顯示成可複製的文字（或你可以直接告訴我）
-    document.getElementById('applyBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      const msg = '目前設定 -> offset: ' + offset + ' px, height: ' + viewH + ' px';
-      alert(msg + '\n\n請把這兩個數字記下來，或貼給我我幫你固定到 index.html');
-    });
-
-    // 偵測 iframe 是否被阻擋（簡單檢查：load event 五秒內沒觸發就顯示提醒）
+    // 偵測 iframe 是否能載入（5 秒內沒 load 視為失敗）
     let loaded = false;
     theFrame.addEventListener('load', () => {
       loaded = true;
       fallback.style.display = 'none';
-      notice.style.display = 'none';
     });
     setTimeout(() => {
       if (!loaded) {
         fallback.style.display = 'block';
-        notice.style.display = 'block';
-        notice.textContent = '注意：iframe 似乎無法載入，可能該站禁止被嵌入（X-Frame-Options）或網路阻擋。';
       }
     }, 5000);
-
-    // 初次更新
-    updateFrame();
   </script>
 </body>
 </html>
