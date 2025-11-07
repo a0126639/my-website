@@ -3,121 +3,151 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>測試：固定 X，Y 可動</title>
+  <title>蚤激安寄賣小舖（乾淨版）</title>
   <style>
     *{box-sizing:border-box}
     html,body{height:100%;margin:0}
     body{
-      font-family: Arial, sans-serif;
+      font-family:Arial, sans-serif;
       display:grid;
       grid-template-columns:200px 1fr 250px;
       height:100vh;
       overflow:hidden;
     }
-    nav{background:#f0f0f0;padding:12px;border-right:1px solid #ccc}
-    aside{background:#fafafa;padding:12px;border-left:1px solid #ccc;overflow:auto}
-    main{position:relative;overflow:hidden}
-    /* 這個是我們要移動的 wrapper（把 transform 套在這裡） */
-    .movable {
-      position:absolute;
-      left:0;
-      top:0;
-      width:4000px;   /* 讓內容足夠寬 */
-      height:4000px;  /* 讓內容足夠高 */
-      transform-origin:0 0;
-      will-change:transform;
+
+    /* 左側連結 */
+    nav{
+      background:#f0f0f0;
+      padding:16px;
+      border-right:1px solid #ddd;
     }
-    .movable iframe {
+    nav a{display:block;margin:8px 0;color:#333;text-decoration:none}
+
+    /* 中間主區（裁切容器） */
+    main{position:relative;overflow:hidden}
+    .crop {
+      position:absolute;
+      left:0; top:0;
+      width:100%;
+      height:100%;
+      overflow:hidden; /* 關鍵：把超出的 iframe 隱藏，達到裁切 */
+      background:#fff;
+    }
+
+    /* 內層 wrapper（用 transform 移動） */
+    .wrapper {
+      position:absolute;
+      left:0; top:0;
+      width:4000px;  /* 夠寬方便左右移動；視需要可調 */
+      height:4000px; /* 夠高方便上下移動；視需要可調 */
+      transform-origin:0 0;
+      will-change: transform;
+    }
+
+    .wrapper iframe{
       display:block;
       width:100%;
       height:100%;
       border:0;
     }
-    /* 手機：取消裁切，讓 iframe 正常顯示 */
+
+    /* 右側廣告 */
+    aside{
+      background:#fafafa;
+      padding:16px;
+      border-left:1px solid #ddd;
+      overflow-y:auto;
+    }
+    .ad-box{background:#e8e8e8;padding:10px;margin-bottom:10px;text-align:center}
+
+    /* 手機：不裁切（顯示完整原站），以避免 iframe 在手機上被裁掉或鎖住 */
     @media (max-width:768px){
-      body{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto;overflow:auto}
-      nav{border-bottom:1px solid #ccc}
-      aside{border-top:1px solid #ccc}
-      main{height:auto;overflow:visible}
-      .movable{position:relative;width:100%;height:80vh;transform:none!important}
-      .movable iframe{width:100%;height:100%}
+      body{
+        grid-template-columns:1fr;
+        grid-template-rows:auto 1fr auto;
+        height:auto;
+      }
+      nav{border-bottom:1px solid #ddd}
+      aside{border-top:1px solid #ddd}
+      main{height:auto; min-height:60vh}
+      .crop{position:relative;height:70vh}
+      .wrapper{position:relative;width:100%;height:100%; transform:none !important}
+      .wrapper iframe{width:100%;height:100%}
     }
-    /* 測試按鈕（可刪） */
-    .tester{
-      position:fixed; right:12px; top:12px; z-index:9999;
-      background:rgba(0,0,0,0.6); color:#fff; padding:8px; border-radius:6px; font-size:13px;
-    }
-    .tester button{margin:4px; padding:6px 8px}
   </style>
 </head>
 <body>
   <nav>
-    <h3>導航</h3>
-    <a href="#">link</a>
+    <h3>網站導覽</h3>
+    <a href="https://www.google.com" target="_blank">Google</a>
+    <a href="https://www.youtube.com" target="_blank">YouTube</a>
+    <a href="https://www.jljh.com.tw/" target="_blank">公司官網</a>
   </nav>
 
   <main>
-    <!-- 我們把 iframe 放在 .movable 裡面，並移動 .movable -->
-    <div class="movable" id="movable">
-      <iframe id="theIframe" src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=" title="測試"></iframe>
+    <!-- 裁切區：把 iframe 包在 wrapper，對 wrapper 做 translate -->
+    <div class="crop" id="crop">
+      <div class="wrapper" id="wrapper">
+        <iframe id="theIframe"
+          src="https://www.jljh.com.tw/usedcust/index.php?mkind=1&list_bno=BD&list_area=A&cate_no=&mnotea=&bagok=%E6%90%9C%E5%B0%8B"
+          title="公司商品列表"></iframe>
+      </div>
     </div>
   </main>
 
   <aside>
-    <h3>廣告</h3>
-    <div>ad</div>
+    <h3>廣告區</h3>
+    <div class="ad-box">廣告 1</div>
+    <div class="ad-box">廣告 2</div>
+    <div class="ad-box">廣告 3</div>
   </aside>
 
-  <!-- 測試用按鈕：左/右/套用 tx（上線後可移除） -->
-  <div class="tester" id="tester">
-    <div>測試 X (固定區間 -2700 ~ -3500)</div>
-    <button id="btnLeft">設 -2700</button>
-    <button id="btnMid">設 -3100</button>
-    <button id="btnRight">設 -3500</button>
-  </div>
-
   <script>
-    // ---------- 參數（你要的設定） ----------
-    const X_MIN = -3500; // 最左（數值更負）
-    const X_MAX = -2700; // 最右（數值較小）
-    let currentX = -3100; // 預設顯示位置（介於 X_MAX 與 X_MIN）
-    let currentY = -420;  // Y 固定
+    /***** 你要修改的 4 個數字（簡單說明在下面） *****/
+    // X 範圍：請把「右邊可視」定為較小負值（例如 -2700）；左邊為更大負值（例如 -3500）
+    const txStart = -2700; // X 起始（靠右）
+    const txEnd   = -3500; // X 結束（靠左）
 
-    const movable = document.getElementById('movable');
+    // Y 範圍：tyStart 為初始 Y（通常負值代表內容往上移），tyEnd 為可下移到的值（通常 0）
+    const tyStart = -420;  // Y 起始（預設顯示位置）
+    const tyEnd   = 0;     // Y 最大（可向下滑到 0）
+
+    // 預設套用位置（可以設成範圍中間值）
+    let tx = Math.round((txStart + txEnd) / 2); // 預設放在中間，例如 -3100
+    let ty = tyStart;
+
+    // 元素
+    const wrapper = document.getElementById('wrapper');
     const iframe = document.getElementById('theIframe');
 
+    // 把位移應用到 wrapper（translate）
     function applyTransform() {
-      movable.style.transform = `translate(${currentX}px, ${currentY}px)`;
-      console.log('applied transform', currentX, currentY, getComputedStyle(movable).transform);
+      wrapper.style.transform = `translate(${tx}px, ${ty}px)`;
     }
-
-    // 測試按鈕事件
-    document.getElementById('btnLeft').addEventListener('click', () => { currentX = X_MAX; applyTransform(); });
-    document.getElementById('btnMid').addEventListener('click', () => { currentX = Math.round((X_MIN+X_MAX)/2); applyTransform(); });
-    document.getElementById('btnRight').addEventListener('click', () => { currentX = X_MIN; applyTransform(); });
-
-    // 允許 Y 軸 滾輪 / 觸控控制（你要的 Y 可動）
-    let isDragging = false, startY = 0, startTy = currentY;
-    movable.addEventListener('mousedown', (e)=>{ isDragging=true; startY=e.clientY; startTy=currentY; movable.style.cursor='grabbing'; });
-    window.addEventListener('mousemove',(e)=>{ if(!isDragging) return; const d = e.clientY - startY; currentY = startTy + d; applyTransform(); });
-    window.addEventListener('mouseup', ()=>{ isDragging=false; movable.style.cursor='grab'; });
-
-    // 觸控
-    let tStartY=0, tStartTy=currentY;
-    movable.addEventListener('touchstart', (e)=>{ tStartY = e.touches[0].clientY; tStartTy = currentY; }, {passive:true});
-    movable.addEventListener('touchmove', (e)=>{ const d = e.touches[0].clientY - tStartY; currentY = tStartTy + d; applyTransform(); }, {passive:true});
 
     // 初始化
     applyTransform();
 
-    // ---------- 快速 debug 指令（在 Console 可執行） ----------
-    // document.getElementById('movable').style.transform = 'translate(-3200px, -420px)';
-    // console.log(getComputedStyle(document.getElementById('movable')).transform);
+    // （選做）如果你想現場測試用 console 即時改數值，下面兩行可在 Console 執行：
+    // document.getElementById('wrapper').style.transform = 'translate(-3200px, -420px)';
+    // console.log(getComputedStyle(document.getElementById('wrapper')).transform);
 
-    // 當 iframe 載入或被阻擋的提示（會在 console 顯示）
-    let loaded=false;
-    iframe.addEventListener('load', ()=>{ loaded=true; console.log('iframe loaded'); });
-    setTimeout(()=>{ if(!loaded) console.warn('iframe 可能被阻擋 (X-Frame-Options/CSP) 或載入緩慢，請查看 Network/Console'); }, 3000);
+    // 載入偵測：若 iframe 被阻擋，會在 console 顯示相關訊息（常見為 X-Frame-Options）
+    let loaded = false;
+    iframe.addEventListener('load', ()=>{ loaded = true; console.log('iframe loaded OK'); });
+    setTimeout(()=>{ if(!loaded) console.warn('iframe 3s 尚未載入（若空白請檢查 Console 是否有 X-Frame-Options/CSP 訊息）'); }, 3000);
+
+    /***** 使用說明（簡單、直接） *****
+    - 若要改 X 範圍，修改 txStart 與 txEnd，然後把 tx 設為你要顯示的位置（範圍內）。
+      範例：要顯示偏右的內容，把 tx 調小負值（例如 -2800）；要偏左就改成更負（例如 -3400）。
+    - 若要改 Y 範圍，修改 tyStart (初始) 與 tyEnd（通常 0）。
+      ty 越負，內容往上移；越接近 0，內容往下移。
+    - 測試快速方法（不用改檔案）：在瀏覽器按 F12 開 Console，貼：
+        document.getElementById('wrapper').style.transform = 'translate(-3200px, -420px)';
+      你會馬上看到效果。把結果滿意後，把對應數值填回上方的 tx 或 ty 變數並儲存上傳。
+    - 手機（max-width:768px）會 **自動取消裁切**，顯示完整公司頁面（避免手機出現空白或被鎖住）。
+    *********************************************/
+
   </script>
 </body>
 </html>
