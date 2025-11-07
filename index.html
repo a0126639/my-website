@@ -1,70 +1,58 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>商品區（已固定裁切）</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>蚤激安寄賣小舖</title>
   <style>
-    * { box-sizing: border-box; }
-    html,body { height:100%; margin:0; }
     body {
-      font-family: Arial, sans-serif;
+      margin: 0;
       display: grid;
       grid-template-columns: 200px 1fr 250px;
       height: 100vh;
-      overflow: hidden;
+      font-family: Arial, sans-serif;
     }
+
+    /* 左側選單區 */
     nav {
-      background:#f0f0f0;
-      padding:12px;
-      border-right:1px solid #ccc;
-    }
-    nav a { display:block; margin:8px 0; color:#333; text-decoration:none; }
-    main {
-      position: relative;
-      background: #fff;
-      overflow: hidden;
-    }
-    aside {
-      background:#fafafa;
-      padding:12px;
-      border-left:1px solid #ccc;
-      overflow-y:auto;
-    }
-    .ad-box { background:#e0e0e0; padding:10px; margin-bottom:10px; text-align:center; }
-
-    /* 裁切容器 */
-    .frame-wrap {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      overflow: hidden;
+      background-color: #f0f0f0;
+      padding: 1em;
+      border-right: 1px solid #ccc;
     }
 
-    /* iframe 本體 */
-    iframe.frame-inner {
-      width: 100%;
-      height: 4000px; /* 設為大值以免不足；會用 transform 移動顯示正確區域 */
-      border: 0;
+    nav a {
       display: block;
-      transform-origin: 0 0;
+      margin: 10px 0;
+      text-decoration: none;
+      color: #333;
     }
 
-    /* 小提示按鈕 */
-    .topbar {
-      position: absolute;
-      left: 12px;
-      top: 12px;
-      z-index: 9999;
-      background: rgba(255,255,255,0.95);
-      padding:8px 10px;
-      border-radius:6px;
-      border:1px solid #ddd;
-      font-size:13px;
+    /* 中間主內容（iframe） */
+    main {
+      padding: 0;
+      border: none;
     }
-    .topbar a { color:#007bff; text-decoration:none; margin-right:8px; }
-    #fallback { padding:16px; display:none; }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* 右側廣告區 */
+    aside {
+      background-color: #fafafa;
+      padding: 1em;
+      border-left: 1px solid #ccc;
+      overflow-y: auto;
+    }
+
+    .ad-box {
+      background-color: #e0e0e0;
+      padding: 10px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -72,10 +60,10 @@
     <h3>網站導覽</h3>
     <a href="https://www.google.com" target="_blank">Google</a>
     <a href="https://www.youtube.com" target="_blank">YouTube</a>
-    <a href="https://www.jljh.com.tw/" target="_blank">嘉隆首頁</a>
+    <a href="https://www.jljh.com.tw/">我要登入</a>
   </nav>
 
-  <main id="main">
+   <main id="main">
     <div class="topbar">
       已固定裁切：水平 X = -201 px ／ 垂直 Y = -438 px ／ 高度 H = 2000 px
       &nbsp;|&nbsp;
@@ -86,7 +74,7 @@
     <div class="frame-wrap" id="frameWrap" style="height:2000px;">
       <iframe id="theFrame" class="frame-inner"
         src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg="
-        title="嘉隆商品區" scrolling="no"></iframe>
+        title="蚤來蚤趣" scrolling="no"></iframe>
     </div>
 
     <!-- 若 iframe 被阻擋或載入失敗，就顯示備援 -->
@@ -98,35 +86,8 @@
   <aside>
     <h3>廣告區</h3>
     <div class="ad-box">這裡可以放你的廣告 1</div>
-    <div class="ad-box">廣告 2</div>
-    <div class="ad-box">或 Google AdSense</div>
+    <div class="ad-box">這裡可以放你的廣告 2</div>
+    <div class="ad-box">或是 Google AdSense 廣告</div>
   </aside>
-
-  <script>
-    // 我把你提供的數值直接寫在這裡
-    const tx = -201;   // 水平位移 px
-    const ty = -438;   // 垂直位移 px
-    const vh = 2000;   // 顯示高度 px
-
-    const frameWrap = document.getElementById('frameWrap');
-    const theFrame = document.getElementById('theFrame');
-    const fallback = document.getElementById('fallback');
-
-    // 套用設定
-    frameWrap.style.height = vh + 'px';
-    theFrame.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
-
-    // 偵測 iframe 是否能載入（5 秒內沒 load 視為失敗）
-    let loaded = false;
-    theFrame.addEventListener('load', () => {
-      loaded = true;
-      fallback.style.display = 'none';
-    });
-    setTimeout(() => {
-      if (!loaded) {
-        fallback.style.display = 'block';
-      }
-    }, 5000);
-  </script>
 </body>
 </html>
