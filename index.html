@@ -27,16 +27,30 @@
       color: #333;
     }
 
-    /* 中間主內容（iframe） */
+    /* 中間主內容 */
     main {
       padding: 0;
       border: none;
+      position: relative;
+      overflow: hidden; /* 關鍵：隱藏多餘內容 */
     }
 
-    iframe {
+    /* 裁切容器 */
+    .frame-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      height: 100%;
+      overflow: hidden; /* 關鍵：裁切內容 */
+    }
+
+    /* iframe 本體 */
+    .frame-inner {
+      width: 100%;
+      height: 4000px; /* 要比容器高 */
       border: none;
+      display: block;
+      transform-origin: 0 0; /* 以左上角為位移基準 */
     }
 
     /* 右側廣告區 */
@@ -63,29 +77,14 @@
     <a href="https://www.jljh.com.tw/">我要登入</a>
   </nav>
 
-<main id="main">
-  <!-- 裁切容器（固定高度 2000px）-->
-  <div class="frame-wrap" id="frameWrap" style="height:2000px;">
-    <iframe id="theFrame" class="frame-inner"
-      src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg="
-      title="蚤來蚤趣" scrolling="no"></iframe>
-  </div>
-</main>
-
-
-  <script>
-  // 固定裁切位置設定
-  const tx = -201;   // 水平位移 px
-  const ty = -438;   // 垂直位移 px
-  const vh = 2000;   // 顯示高度 px
-
-  const frameWrap = document.getElementById('frameWrap');
-  const theFrame = document.getElementById('theFrame');
-
-  // 套用設定
-  frameWrap.style.height = vh + 'px';
-  theFrame.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
-</script>
+  <main id="main">
+    <!-- 裁切容器（固定高度 2000px）-->
+    <div class="frame-wrap" id="frameWrap" style="height:2000px;">
+      <iframe id="theFrame" class="frame-inner"
+        src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg="
+        title="蚤來蚤趣" scrolling="no"></iframe>
+    </div>
+  </main>
 
   <aside>
     <h3>廣告區</h3>
@@ -93,8 +92,19 @@
     <div class="ad-box">這裡可以放你的廣告 2</div>
     <div class="ad-box">或是 Google AdSense 廣告</div>
   </aside>
+
+  <script>
+    // 固定裁切位置設定
+    const tx = -201;   // 水平位移 px
+    const ty = -438;   // 垂直位移 px
+    const vh = 2000;   // 顯示高度 px
+
+    const frameWrap = document.getElementById('frameWrap');
+    const theFrame = document.getElementById('theFrame');
+
+    // 套用設定
+    frameWrap.style.height = vh + 'px';
+    theFrame.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
+  </script>
 </body>
 </html>
-
-
-
