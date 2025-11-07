@@ -3,36 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>我的多區域網站</title>
+  <title>商品區裁切示範</title>
   <style>
     body {
       margin: 0;
+      font-family: Arial, sans-serif;
       display: grid;
       grid-template-columns: 200px 1fr 250px;
       height: 100vh;
-      font-family: Arial, sans-serif;
+      overflow: hidden;
     }
     nav {
-      background-color: #f0f0f0;
-      padding: 1em;
-      border-right: 1px solid #ccc;
+      background:#f0f0f0;
+      padding:1em;
+      border-right:1px solid #ccc;
     }
-    nav a { display:block; margin:10px 0; text-decoration:none; color:#333; }
-    main { padding:0; border:none; }
-    iframe { width:100%; height:100%; border:none; }
+    nav a { display:block; margin:8px 0; color:#333; text-decoration:none; }
+    main {
+      position: relative;
+      background: #fff;
+      overflow: hidden; /* 這裡把多餘部分藏起來 */
+    }
+    /* iframe 會放在 container 裡面，我們用 transform 來移動 */
+    .frame-wrap {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      /* 高度會由 JS 設定為你想要顯示的高度 */
+      overflow: hidden;
+    }
+    .frame-inner {
+      width: 100%;
+      border: 0;
+      /* 讓 iframe 本身比容器高，方便往上移動裁切 */
+      transform-origin: 0 0;
+      display: block;
+    }
+
     aside {
-      background-color: #fafafa;
-      padding: 1em;
+      background:#fafafa;
+      padding:1em;
       border-left:1px solid #ccc;
       overflow-y:auto;
     }
-    .ad-box { background-color:#e0e0e0; padding:10px; margin-bottom:10px; text-align:center; }
-    .fallback {
-      padding: 1em;
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      margin: 10px;
-      border-radius: 6px;
+    .ad-box { background:#e0e0e0; padding:10px; margin-bottom:10px; text-align:center; }
+
+    /* 控制面板 */
+    .panel {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #ddd;
+      padding:8px;
+      border-radius:6px;
+      z-index: 9999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      width: 360px;
+    }
+    .panel h4 { margin:0 0 6px 0; font-size:14px; }
+    .panel label { font-size:13px; display:block; margin-top:6px; }
+    .panel input[type="range"] { width:100%; }
+    .panel .small { font-size:12px; color:#666; margin-top:4px; }
+    .btn {
+      display:inline-block; padding:6px 10px; margin-top:8px;
+      background:#007bff; color:#fff; text-decoration:none; border-radius:4px;
+    }
+    .notice {
+      margin-top:8px; font-size:13px; color:#a00;
     }
   </style>
 </head>
@@ -44,22 +83,36 @@
     <a href="https://www.jljh.com.tw/" target="_blank">嘉隆首頁</a>
   </nav>
 
-  <main>
-  <div style="width:100%; height:100%; overflow:hidden;">
-    <iframe 
-      src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=" 
-      style="width:100%; height:2000px; border:none; margin-top:-300px;" 
-      title="商品區">
-    </iframe>
-  </div>
-</main>
+  <main id="main">
+    <!-- 控制面板（調整用） -->
+    <div class="panel" id="panel">
+      <h4>裁切工具（調整後請記下數值）</h4>
 
-    <!-- 如果 iframe 被擋，顯示這個備援訊息與按鈕 -->
-    <div id="fallback" class="fallback" style="display:none;">
-      無法在本頁嵌入公司網站（iframe 被阻擋或第三方 cookie 被封鎖）。<br/>
-      <a id="openNew" href="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=" target="_blank" rel="noopener noreferrer">
-        點此在新分頁開啟公司網站登入
-      </a>
+      <label>上移 offset（向上移越多，會顯示更下面的內容）: <span id="offVal">-300</span> px</label>
+      <input id="offsetRange" type="range" min="-1200" max="0" value="-300" step="10">
+
+      <label>視窗顯示高度（view height）: <span id="hVal">800</span> px</label>
+      <input id="heightRange" type="range" min="200" max="2400" value="800" step="10">
+
+      <div class="small">1) 拖拉兩個滑桿直到「只看到紅框商品區」。<br>
+      2) 找到理想數值後，把 <strong>offset</strong> 與 <strong>height</strong> 的數字記下來（或我幫你固定）。</div>
+
+      <a id="applyBtn" class="btn" href="#">套用目前設定</a>
+      <a id="openNewBtn" class="btn" style="background:#28a745; margin-left:8px;" target="_blank" href="https://www.jljh.com.tw/usedcust/index.php?t=1&npg=">在新分頁開啟原站</a>
+
+      <div class="notice" id="notice" style="display:none;"></div>
+    </div>
+
+    <!-- iframe 裁切容器 -->
+    <div class="frame-wrap" id="frameWrap" style="height:800px;">
+      <iframe id="theFrame" class="frame-inner"
+        src="https://www.jljh.com.tw/usedcust/index.php?t=1&npg="
+        title="嘉隆商品區" scrolling="no"></iframe>
+    </div>
+
+    <!-- 備援訊息（若 iframe 被擋） -->
+    <div id="fallback" style="display:none; padding:16px;">
+      <strong>提醒：</strong> 這個網站可能不允許在 iframe 中顯示（或是被瀏覽器阻擋第三方 cookie）。請按「在新分頁開啟原站」來登入或檢視完整內容。
     </div>
   </main>
 
@@ -71,22 +124,64 @@
   </aside>
 
   <script>
-    // 嘗試偵測 iframe 是否能正常載入 (簡單判斷：load 事件若在 5 秒內沒有觸發，顯示備援)
-    const iframe = document.getElementById('companyFrame');
+    // 元件
+    const offsetRange = document.getElementById('offsetRange');
+    const heightRange = document.getElementById('heightRange');
+    const offVal = document.getElementById('offVal');
+    const hVal = document.getElementById('hVal');
+    const frameWrap = document.getElementById('frameWrap');
+    const theFrame = document.getElementById('theFrame');
+    const notice = document.getElementById('notice');
     const fallback = document.getElementById('fallback');
-    let loaded = false;
 
-    iframe.addEventListener('load', () => {
-      loaded = true;
-      // 載入成功就隱藏備援（若載入但內部有 login 問題，那就是 cookie / sameSite 問題）
-      fallback.style.display = 'none';
+    // 初始值（可修改）
+    let offset = parseInt(offsetRange.value, 10); // 例如 -300
+    let viewH = parseInt(heightRange.value, 10); // 例如 800
+
+    // 更新畫面函式
+    function updateFrame() {
+      offVal.textContent = offset;
+      hVal.textContent = viewH;
+      // 設定可見容器高度（你想顯示的區域高度）
+      frameWrap.style.height = viewH + 'px';
+      // 將 iframe 用 transform translateY 向上移（負值往上）
+      theFrame.style.transform = 'translateY(' + offset + 'px)';
+    }
+
+    // 連動滑桿
+    offsetRange.addEventListener('input', (e) => {
+      offset = parseInt(e.target.value, 10);
+      updateFrame();
+    });
+    heightRange.addEventListener('input', (e) => {
+      viewH = parseInt(e.target.value, 10);
+      updateFrame();
     });
 
-    // 5 秒後如果還沒 load，顯示備援
+    // 套用按鈕：把目前數值顯示成可複製的文字（或你可以直接告訴我）
+    document.getElementById('applyBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const msg = '目前設定 -> offset: ' + offset + ' px, height: ' + viewH + ' px';
+      alert(msg + '\n\n請把這兩個數字記下來，或貼給我我幫你固定到 index.html');
+    });
+
+    // 偵測 iframe 是否被阻擋（簡單檢查：load event 五秒內沒觸發就顯示提醒）
+    let loaded = false;
+    theFrame.addEventListener('load', () => {
+      loaded = true;
+      fallback.style.display = 'none';
+      notice.style.display = 'none';
+    });
     setTimeout(() => {
-      if (!loaded) fallback.style.display = 'block';
+      if (!loaded) {
+        fallback.style.display = 'block';
+        notice.style.display = 'block';
+        notice.textContent = '注意：iframe 似乎無法載入，可能該站禁止被嵌入（X-Frame-Options）或網路阻擋。';
+      }
     }, 5000);
+
+    // 初次更新
+    updateFrame();
   </script>
 </body>
 </html>
-
