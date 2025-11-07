@@ -143,67 +143,15 @@
     const frameWrap = document.getElementById('frameWrap');
     const theFrame = document.getElementById('theFrame');
 
-    // 滑鼠滾輪或拖曳控制 X 方向移動
-    let currentTx = txStart;
-    let isDragging = false;
-    let startX = 0;
-    let lastTx = currentTx;
-
     function updateTransform() {
       theFrame.style.transform = `translate(${currentTx}px, ${ty}px)`;
     }
-
-    // 滑鼠滾輪橫向滾動
-    frameWrap.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      currentTx -= e.deltaY * 0.5; // deltaY 控制水平移動
-      if (currentTx < txEnd) currentTx = txEnd;
-      if (currentTx > txStart) currentTx = txStart;
-      updateTransform();
-    });
-
-    // 滑鼠拖曳
-    frameWrap.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      startX = e.clientX;
-      lastTx = currentTx;
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const delta = e.clientX - startX;
-      currentTx = lastTx + delta;
-      if (currentTx < txEnd) currentTx = txEnd;
-      if (currentTx > txStart) currentTx = txStart;
-      updateTransform();
-    });
-
-    window.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
-
-    // 觸控拖曳（手機、平板）
-    let touchStartX = 0;
-    let touchLastTx = currentTx;
-
-    frameWrap.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchLastTx = currentTx;
-    });
-
-    frameWrap.addEventListener('touchmove', (e) => {
-      const delta = e.touches[0].clientX - touchStartX;
-      currentTx = touchLastTx + delta;
-      if (currentTx < txEnd) currentTx = txEnd;
-      if (currentTx > txStart) currentTx = txStart;
-      updateTransform();
-    });
-
-    // 初始化
+    
     updateTransform();
   </script>
 </body>
 </html>
+
 
 
 
