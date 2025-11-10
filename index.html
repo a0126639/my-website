@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>蚤激安寄賣小舖（限制滾動範圍）</title>
+  <title>蚤激安寄賣小舖（限制滾動範圍 + 可見捲軸）</title>
   <style>
     *{box-sizing:border-box}
     html,body{height:100%;margin:0}
@@ -37,7 +37,7 @@
       width:100%; height:100%;
       overflow:hidden; /* 外部隱藏，內容由 JS 移動 */
       background:#fff;
-      touch-action: none; /* 禁用預設觸控滾動，交由 JS 處理 */
+      touch-action: none; /* 交由 JS 處理觸控 */
       cursor: grab;
     }
     .crop.dragging { cursor: grabbing; }
@@ -58,7 +58,7 @@
       position:relative;
       width:100%;
       height:100%;
-      pointer-events: auto;
+      pointer-events: auto; /* JS 會在必要時切換 */
     }
 
     iframe{
@@ -66,8 +66,7 @@
       width:100%;
       height:100%;
       border:0;
-      /* 預設允許互動；script 會在需要時切換 pointer-events */
-      pointer-events: auto;
+      pointer-events: auto; /* JS 控制 enable/disable */
     }
 
     /* 右側廣告 */
@@ -79,15 +78,47 @@
     }
     .ad-box{background:#e8e8e8;padding:10px;margin-bottom:10px;text-align:center}
 
-    /* 手機：取消裁切、完整顯示原站 */
+    /* 自訂垂直捲軸（floating inside crop，右側） */
+    .v-scrollbar {
+      position:absolute;
+      right:6px;
+      top:6px;
+      bottom:6px;
+      width:12px;
+      border-radius:8px;
+      background: rgba(0,0,0,0.06);
+      display:flex;
+      align-items:flex-start;
+      z-index:40;
+      touch-action: none;
+    }
+    .v-scrollbar .thumb {
+      margin:0 auto;
+      width:8px;
+      border-radius:6px;
+      background: rgba(0,0,0,0.28);
+      min-height:28px;
+      transform: translateY(0);
+      transition: background 120ms;
+      touch-action: none;
+    }
+    .v-scrollbar .thumb:active { background: rgba(0,0,0,0.4); }
+
+    /* 在 hover 時突出捲軸（桌機） */
+    .crop:hover .v-scrollbar { background: rgba(0,0,0,0.08); }
+    .crop:hover .v-scrollbar .thumb { background: rgba(0,0,0,0.34); }
+
+    /* 手機：保留相同行為（不要改成原頁面） */
     @media (max-width:768px){
-      body{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto;overflow:auto}
+      body{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:100vh;overflow:hidden}
       nav{border-bottom:1px solid #ddd}
-      aside{border-top:1px solid #ddd}
-      main{height:auto}
-      .crop{position:relative;height:70vh; touch-action: auto; cursor: default}
-      .wrapper{position:relative;width:100%;height:100%;transform:none !important; pointer-events:auto}
-      iframe{width:100%;height:100%}
+      aside{display:none} /* 手機版可以隱藏側欄讓預覽更大，若不想請移除這行 */
+      main{height:100vh}
+      /* 保持 crop 行為一致（不要把 wrapper 的 transform 關掉） */
+      .crop{position:relative;height:100vh; touch-action: none; cursor: grab}
+      .wrapper{position:absolute; width:4000px; height:4000px; transform-origin:0 0}
+      .frame-wrap{height:100%}
+      iframe{height:100%}
     }
   </style>
 </head>
@@ -102,7 +133,6 @@
   <main>
     <div class="crop" id="crop">
       <div class="wrapper" id="wrapper">
-        <!-- 讓 iframe 在一個可點擊的容器內 -->
         <div class="frame-wrap">
           <iframe
             id="theIframe"
@@ -111,6 +141,11 @@
             scrolling="no">
           </iframe>
         </div>
+      </div>
+
+      <!-- 自訂捲軸 -->
+      <div class="v-scrollbar" id="vscroll" aria-hidden="true">
+        <div class="thumb" id="thumb"></div>
       </div>
     </div>
   </main>
@@ -124,91 +159,107 @@
 
   <script>
     /* -------------------------
-      可調參數（你可以調整）
-      tx  = X 固定水平位移（保留你原本的 -1706）
-      speedWheel = 滾輪靈敏度（>0）
+      參數
     ------------------------- */
-    const tx = -1706;             // 水平位移（固定）
-    const speedWheel = 0.8;       // 滾輪速度倍數（0.5~1.5 之間常用）
+    const tx = -1706;       // 水平固定位移
+    const speedWheel = 0.8; // 滾輪速度
+    const MIN_THUMB = 28;   // 最小 thumb 高度（像素）
 
+    /* DOM */
     const crop = document.getElementById('crop');
     const wrapper = document.getElementById('wrapper');
     const iframe = document.getElementById('theIframe');
+    const vscroll = document.getElementById('vscroll');
+    const thumb = document.getElementById('thumb');
 
-    // 動態上下限制（會在 init/resize 時計算）
-    let ty = 0;       // 當前 Y（transform 的 translateY）
-    let tyMin = 0;    // 最大可往上（負值或 0）
-    let tyMax = 0;    // 最大可往下（通常 0）
+    /* 狀態 */
+    let ty = 0;
+    let tyMin = 0;
+    let tyMax = 0;
     let isDragging = false;
     let startY = 0;
     let startTy = 0;
 
-    function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
+    /* scrollbar 狀態 */
+    let draggingThumb = false;
+    let thumbStartY = 0;
+    let thumbStartTop = 0;
+    let thumbHeight = MIN_THUMB;
+    let trackHeight = 0;
 
-    function applyTransform() {
-      const txInt = Math.round(tx);
-      const tyInt = Math.round(ty);
-      wrapper.style.transform = `translate(${txInt}px, ${tyInt}px)`;
+    function clamp(v, a, b){ return Math.min(Math.max(v, a), b); }
+
+    function applyTransform(){
+      wrapper.style.transform = `translate(${Math.round(tx)}px, ${Math.round(ty)}px)`;
+      updateThumbPosition();
     }
 
-    function updateBounds() {
+    /* 計算 ty 範圍與捲軸尺寸 */
+    function updateBoundsAndThumb(){
       const cropH = crop.clientHeight;
       const wrapperH = wrapper.scrollHeight || wrapper.offsetHeight;
+
       tyMax = 0;
-      tyMin = Math.min(0, cropH - wrapperH);
+      tyMin = Math.min(0, cropH - wrapperH); // 負數或 0
       ty = clamp(ty, tyMin, tyMax);
+
+      // track 可用高度（捲軸上下內邊距已在 CSS 設 6px）
+      trackHeight = Math.max(20, vscroll.clientHeight);
+      // thumb 高度依比例計算
+      if (wrapperH <= 0) {
+        thumbHeight = MIN_THUMB;
+      } else {
+        const ratio = cropH / wrapperH;
+        thumbHeight = Math.max(MIN_THUMB, Math.round(trackHeight * ratio));
+      }
+      thumb.style.height = thumbHeight + 'px';
+
       applyTransform();
     }
 
-    function init() {
-      updateBounds();
-    }
-    window.addEventListener('resize', updateBounds);
-    window.addEventListener('orientationchange', updateBounds);
-    iframe.addEventListener('load', () => {
-      setTimeout(updateBounds, 200);
-      console.log('iframe loaded (若被拒載則可能無法偵測高度變化)');
-    });
-
-    /* ------------------------
-      協助函式：在游標或觸控進入 crop 時，暫時關閉 iframe 的 pointer-events，
-      讓 crop 能接收 wheel / mouse / touch 事件；離開或互動結束時還原
-    ------------------------ */
-    let iframePointerSaved = iframe.style.pointerEvents || 'auto';
-    function disableIframePointer() {
-      // 只在非手機（或需要）時關閉；直接設定為 'none'
-      iframe.style.pointerEvents = 'none';
-    }
-    function enableIframePointer() {
-      iframe.style.pointerEvents = iframePointerSaved || 'auto';
+    function updateThumbPosition(){
+      const cropH = crop.clientHeight;
+      const wrapperH = wrapper.scrollHeight || wrapper.offsetHeight;
+      if (wrapperH <= cropH) {
+        // 內容未溢出：收起或隱藏 thumb（但為簡單，縮到最小）
+        thumb.style.opacity = 0.35;
+        thumb.style.transform = `translateY(0px)`;
+        return;
+      } else {
+        thumb.style.opacity = 1;
+      }
+      const scrollRange = wrapperH - cropH;
+      const thumbRange = trackHeight - thumbHeight;
+      const progress = ( -ty ) / ( scrollRange || 1 ); // 0..1
+      const thumbTop = clamp(Math.round(progress * thumbRange), 0, thumbRange);
+      thumb.style.transform = `translateY(${thumbTop}px)`;
     }
 
-    // 當滑鼠移入預覽區時，讓 crop 接收事件（包含 wheel）
-    crop.addEventListener('mouseenter', () => {
-      disableIframePointer();
-    });
-    // 當滑鼠離開時，還原 iframe 的互動能力
-    crop.addEventListener('mouseleave', () => {
-      enableIframePointer();
-    });
+    /* 當使用滑鼠或觸控在 crop 上時，暫時關閉 iframe pointer-events */
+    let savedIframePointer = iframe.style.pointerEvents || 'auto';
+    function disableIframePointer(){ iframe.style.pointerEvents = 'none'; }
+    function enableIframePointer(){ iframe.style.pointerEvents = savedIframePointer || 'auto'; }
 
-    /* 滾輪：只在 crop 範圍內作用，並 preventDefault 阻止整頁滾動 */
+    /* wheel 支援（桌機） */
     crop.addEventListener('wheel', (e) => {
       e.preventDefault();
+      disableIframePointer();
       const delta = e.deltaY * speedWheel;
       ty -= delta;
       ty = clamp(ty, tyMin, tyMax);
       applyTransform();
+      // 在 wheel 停後短暫還原 pointer，避免一直禁用 iframe（提高互動性）
+      clearTimeout(crop._wheelTimer);
+      crop._wheelTimer = setTimeout(() => enableIframePointer(), 400);
     }, { passive: false });
 
-    /* 滑鼠拖曳（desktop）*/
+    /* 滑鼠拖曳內容（desktop） */
     crop.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
       isDragging = true;
       startY = e.clientY;
       startTy = ty;
       crop.classList.add('dragging');
-      // 當開始拖曳時確保 iframe 不會接收事件
       disableIframePointer();
       e.preventDefault();
     });
@@ -218,28 +269,19 @@
       ty = clamp(startTy + delta, tyMin, tyMax);
       applyTransform();
     });
-    window.addEventListener('mouseup', () => {
+    window.addEventListener('mouseup', (e) => {
       if (!isDragging) return;
       isDragging = false;
       crop.classList.remove('dragging');
-      // 拖曳結束，若游標仍在 crop 內則保留 disable（mouseenter 已處理），否則還原
-      // 使用 elementFromPoint 判斷游標是否在 crop
-      const x = window.event ? window.event.clientX : null;
-      const y = window.event ? window.event.clientY : null;
-      if (typeof x === 'number' && typeof y === 'number') {
-        const el = document.elementFromPoint(x, y);
-        if (!crop.contains(el)) enableIframePointer();
-      } else {
-        enableIframePointer();
-      }
+      // 若游標仍在 crop，保留 disable（mouseenter/manleave 也處理），否則還原
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!crop.contains(el)) enableIframePointer();
     });
 
-    /* 觸控（mobile / tablet）*/
-    let touchStartY = 0;
-    let touchStartTy = 0;
+    /* 觸控（mobile / tablet） - 在 crop 上 */
+    let touchStartY = 0, touchStartTy = 0;
     crop.addEventListener('touchstart', (e) => {
       if (!e.touches || e.touches.length === 0) return;
-      // 開始觸控就關閉 iframe pointer（有些手機瀏覽器可能不需要，但保險）
       disableIframePointer();
       touchStartY = e.touches[0].clientY;
       touchStartTy = ty;
@@ -254,16 +296,123 @@
     }, { passive: false });
 
     crop.addEventListener('touchend', (e) => {
-      // 結束觸控後還原 iframe pointer（若觸控結束時仍在 crop 可維持，但通常還原）
-      // 稍微延遲還原，避免與快速重複事件衝突
-      setTimeout(() => {
-        enableIframePointer();
-      }, 50);
+      // 延遲還原以避免與短暫點擊互動衝突
+      setTimeout(() => enableIframePointer(), 60);
     });
 
-    /* 初始化 */
+    /* mouseenter / leave：控制 iframe pointer（桌機） */
+    crop.addEventListener('mouseenter', () => disableIframePointer());
+    crop.addEventListener('mouseleave', () => enableIframePointer());
+
+    /* -------------------------
+       scrollbar: 拖曳 thumb 或在 track 點擊
+       支援 mouse + touch
+    ------------------------- */
+    // 當點擊 track（vscroll）空白處時，跳到該位置中心
+    vscroll.addEventListener('click', (e) => {
+      // 如果點在 thumb 上，忽略（thumb 自己處理）
+      if (e.target === thumb) return;
+      // relative Y within track
+      const rect = vscroll.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const len = trackHeight - thumbHeight;
+      const thumbTop = clamp(y - thumbHeight/2, 0, len);
+      // 轉成 ty
+      const cropH = crop.clientHeight;
+      const wrapperH = wrapper.scrollHeight || wrapper.offsetHeight;
+      const scrollRange = wrapperH - cropH;
+      const progress = (len === 0) ? 0 : thumbTop / len;
+      ty = - Math.round(progress * scrollRange);
+      ty = clamp(ty, tyMin, tyMax);
+      applyTransform();
+    });
+
+    // thumb mouse drag
+    thumb.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      draggingThumb = true;
+      thumbStartY = e.clientY;
+      // parse current transform translateY to get top (we use computed by updateThumbPosition instead)
+      thumbStartTop = parseInt(thumb.style.transform.replace(/[^\d-]/g,'')) || 0;
+      disableIframePointer();
+      document.body.classList.add('no-select');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!draggingThumb) return;
+      const delta = e.clientY - thumbStartY;
+      const newTop = clamp(thumbStartTop + delta, 0, Math.max(0, trackHeight - thumbHeight));
+      // convert to ty
+      const cropH = crop.clientHeight;
+      const wrapperH = wrapper.scrollHeight || wrapper.offsetHeight;
+      const len = trackHeight - thumbHeight;
+      const progress = len === 0 ? 0 : newTop / len;
+      const scrollRange = Math.max(0, wrapperH - cropH);
+      ty = - Math.round(progress * scrollRange);
+      ty = clamp(ty, tyMin, tyMax);
+      applyTransform();
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (draggingThumb) {
+        draggingThumb = false;
+        enableIframePointer();
+        document.body.classList.remove('no-select');
+      }
+    });
+
+    // thumb touch drag
+    thumb.addEventListener('touchstart', (e) => {
+      if (!e.touches || e.touches.length === 0) return;
+      e.stopPropagation();
+      draggingThumb = true;
+      thumbStartY = e.touches[0].clientY;
+      // 讀目前 transform 的 translateY 值
+      const matrix = window.getComputedStyle(thumb).transform;
+      let curTop = 0;
+      if (matrix && matrix !== 'none') {
+        const vals = matrix.match(/matrix.*\((.+)\)/)[1].split(', ');
+        curTop = parseFloat(vals[5]) || 0;
+      }
+      thumbStartTop = curTop;
+      disableIframePointer();
+    }, { passive: false });
+
+    thumb.addEventListener('touchmove', (e) => {
+      if (!draggingThumb || !e.touches || e.touches.length === 0) return;
+      e.preventDefault();
+      const delta = e.touches[0].clientY - thumbStartY;
+      const newTop = clamp(thumbStartTop + delta, 0, Math.max(0, trackHeight - thumbHeight));
+      const cropH = crop.clientHeight;
+      const wrapperH = wrapper.scrollHeight || wrapper.offsetHeight;
+      const len = trackHeight - thumbHeight;
+      const progress = len === 0 ? 0 : newTop / len;
+      const scrollRange = Math.max(0, wrapperH - cropH);
+      ty = - Math.round(progress * scrollRange);
+      ty = clamp(ty, tyMin, tyMax);
+      applyTransform();
+    }, { passive: false });
+
+    thumb.addEventListener('touchend', (e) => {
+      if (draggingThumb) {
+        draggingThumb = false;
+        setTimeout(() => enableIframePointer(), 40);
+      }
+    });
+
+    /* 初始化與 resize 更新 */
+    function init(){
+      updateBoundsAndThumb();
+    }
+    window.addEventListener('resize', updateBoundsAndThumb);
+    window.addEventListener('orientationchange', updateBoundsAndThumb);
+    iframe.addEventListener('load', () => {
+      // iframe 可能是跨域，scrollHeight 可能不受影響，但我們仍延遲更新一次
+      setTimeout(updateBoundsAndThumb, 180);
+    });
+
+    // 初始化
     init();
-    window.addEventListener('load', () => setTimeout(updateBounds, 80));
+    window.addEventListener('load', () => setTimeout(updateBoundsAndThumb, 120));
   </script>
 </body>
 </html>
