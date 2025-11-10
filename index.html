@@ -51,15 +51,14 @@
       will-change:transform;
       -webkit-user-select:none;
       user-select:none;
-      pointer-events: none; /* 禁用 wrapper 上的 pointer，以免干擾 iframe 的互動 */
     }
 
-    /* iframe 放在 wrapper 中，但需要能接受互動（pointer-events: auto） */
+    /* iframe 放在 wrapper 中 */
     .frame-wrap {
       position:relative;
       width:100%;
       height:100%;
-      pointer-events: auto; /* 允許 iframe 接受點擊 */
+      pointer-events: auto;
     }
 
     iframe{
@@ -67,6 +66,7 @@
       width:100%;
       height:100%;
       border:0;
+      /* 預設允許互動；script 會在需要時切換 pointer-events */
       pointer-events: auto;
     }
 
@@ -108,7 +108,7 @@
             id="theIframe"
             src="https://www.jljh.com.tw/usedcust/index.php?mkind=1&list_bno=BD&list_area=A&cate_no=&mnotea=&bagok=%E6%90%9C%E5%B0%8B"
             title="公司商品列表"
-            scrolling="yes">
+            scrolling="no">
           </iframe>
         </div>
       </div>
@@ -145,68 +145,71 @@
 
     function clamp(v, a, b) { return Math.min(Math.max(v, a), b); }
 
-    // 設定 transform
     function applyTransform() {
-      // 使用整數避免 sub-pixel 模糊
       const txInt = Math.round(tx);
       const tyInt = Math.round(ty);
       wrapper.style.transform = `translate(${txInt}px, ${tyInt}px)`;
     }
 
-    // 依據 crop 與 wrapper 高度計算範圍
     function updateBounds() {
-      // crop 可視高度
       const cropH = crop.clientHeight;
-      // wrapper 實際內容高度（使用 CSS 高度值或 scrollHeight）
       const wrapperH = wrapper.scrollHeight || wrapper.offsetHeight;
-
-      // 設計：ty 表示 wrapper 的 translateY
-      // 使 wrapper 的頂部不能往下超過 0（也就是不能露出空白在上方）
       tyMax = 0;
-      // wrapper 底部不能往上露出空白在底部 => tyMin = cropH - wrapperH
       tyMin = Math.min(0, cropH - wrapperH);
-
-      // 保證當前 ty 在範圍內
       ty = clamp(ty, tyMin, tyMax);
       applyTransform();
     }
 
-    // 初始化與監聽 resize（視窗或容器大小變化要重新計算）
     function init() {
-      // 若 wrapper 的內容高度非常小，確保 wrapperH >= cropH，否則會看到上/下空白（這是正常的）
       updateBounds();
     }
     window.addEventListener('resize', updateBounds);
     window.addEventListener('orientationchange', updateBounds);
-    // 等 iframe 嘗試載入後也更新（有些情況 iframe 會影響 scrollHeight）
     iframe.addEventListener('load', () => {
-      setTimeout(updateBounds, 200); // 稍微延遲一次計算
+      setTimeout(updateBounds, 200);
       console.log('iframe loaded (若被拒載則可能無法偵測高度變化)');
     });
 
     /* ------------------------
-      滾輪：只在 crop 範圍內作用，並 preventDefault 阻止整頁滾動
+      協助函式：在游標或觸控進入 crop 時，暫時關閉 iframe 的 pointer-events，
+      讓 crop 能接收 wheel / mouse / touch 事件；離開或互動結束時還原
     ------------------------ */
+    let iframePointerSaved = iframe.style.pointerEvents || 'auto';
+    function disableIframePointer() {
+      // 只在非手機（或需要）時關閉；直接設定為 'none'
+      iframe.style.pointerEvents = 'none';
+    }
+    function enableIframePointer() {
+      iframe.style.pointerEvents = iframePointerSaved || 'auto';
+    }
+
+    // 當滑鼠移入預覽區時，讓 crop 接收事件（包含 wheel）
+    crop.addEventListener('mouseenter', () => {
+      disableIframePointer();
+    });
+    // 當滑鼠離開時，還原 iframe 的互動能力
+    crop.addEventListener('mouseleave', () => {
+      enableIframePointer();
+    });
+
+    /* 滾輪：只在 crop 範圍內作用，並 preventDefault 阻止整頁滾動 */
     crop.addEventListener('wheel', (e) => {
-      // 只有在 desktop / 有 wheel 的情況下
       e.preventDefault();
       const delta = e.deltaY * speedWheel;
-      // 往下滾（delta>0）時，內容往上移（ty 減小）
       ty -= delta;
       ty = clamp(ty, tyMin, tyMax);
       applyTransform();
     }, { passive: false });
 
-    /* ------------------------
-      滑鼠拖曳（desktop）
-    ------------------------ */
+    /* 滑鼠拖曳（desktop）*/
     crop.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return; // 只處理左鍵
+      if (e.button !== 0) return;
       isDragging = true;
       startY = e.clientY;
       startTy = ty;
       crop.classList.add('dragging');
-      // 防止選取文字
+      // 當開始拖曳時確保 iframe 不會接收事件
+      disableIframePointer();
       e.preventDefault();
     });
     window.addEventListener('mousemove', (e) => {
@@ -219,34 +222,48 @@
       if (!isDragging) return;
       isDragging = false;
       crop.classList.remove('dragging');
+      // 拖曳結束，若游標仍在 crop 內則保留 disable（mouseenter 已處理），否則還原
+      // 使用 elementFromPoint 判斷游標是否在 crop
+      const x = window.event ? window.event.clientX : null;
+      const y = window.event ? window.event.clientY : null;
+      if (typeof x === 'number' && typeof y === 'number') {
+        const el = document.elementFromPoint(x, y);
+        if (!crop.contains(el)) enableIframePointer();
+      } else {
+        enableIframePointer();
+      }
     });
 
-    /* ------------------------
-      觸控（mobile / tablet）
-      注意：在 CSS 我把 touch-action: none 加到 .crop，所以這裡可以安全用 passive:false
-    ------------------------ */
+    /* 觸控（mobile / tablet）*/
     let touchStartY = 0;
     let touchStartTy = 0;
     crop.addEventListener('touchstart', (e) => {
       if (!e.touches || e.touches.length === 0) return;
+      // 開始觸控就關閉 iframe pointer（有些手機瀏覽器可能不需要，但保險）
+      disableIframePointer();
       touchStartY = e.touches[0].clientY;
       touchStartTy = ty;
-    }, { passive: true }); // 不需要 preventDefault 在 start
+    }, { passive: true });
 
     crop.addEventListener('touchmove', (e) => {
       if (!e.touches || e.touches.length === 0) return;
-      // preventDefault 以阻止瀏覽器原生滾動（我們已在 CSS 用 touch-action: none，但這裡保險）
       e.preventDefault && e.preventDefault();
       const delta = e.touches[0].clientY - touchStartY;
       ty = clamp(touchStartTy + delta, tyMin, tyMax);
       applyTransform();
     }, { passive: false });
 
+    crop.addEventListener('touchend', (e) => {
+      // 結束觸控後還原 iframe pointer（若觸控結束時仍在 crop 可維持，但通常還原）
+      // 稍微延遲還原，避免與快速重複事件衝突
+      setTimeout(() => {
+        enableIframePointer();
+      }, 50);
+    });
+
     /* 初始化 */
     init();
-    // 若 document ready 時元素尺寸還沒定好，也延遲一次 update
     window.addEventListener('load', () => setTimeout(updateBounds, 80));
   </script>
 </body>
 </html>
-
