@@ -24,7 +24,11 @@
   <header class="bg-white shadow-sm">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
       <h1 class="text-xl font-bold">公告</h1>
-      <div class="text-sm text-gray-600">寄賣平台公告</div>
+      <div class="text-sm text-gray-600">
+              <div class="mt-6 flex items-center justify-between">
+        <div class="text-sm text-gray-600">最後更新：<span id="updated-date"></span></div>
+      </div>
+      </div>
     </div>
   </header>
 
@@ -63,27 +67,15 @@
         <div class="bg-gray-50 border rounded-lg p-4 flex justify-center">
           <img src="docs/1.png" alt="拒收限收商品清單" class="max-w-full h-auto" />
         </div>
-
-        <p class="text-xs text-gray-500 mt-3">
-          ★ 凡過時、過期、太舊、太髒、缺件、無法正常使用之商品皆不收。  
-          ★ 店家保有停止收/拒收部份商品之權利，詳見各店內公告。  
-          ★ 以上規則店家保有增修訂權，如有修訂以各店內最新公告為準。
-        </p>
+        
       </section>
-
-      <div class="mt-6 flex items-center justify-between">
-        <div class="text-sm text-gray-600">最後更新：<span id="updated-date"></span></div>
-        <div class="space-x-2">
-          <a href="#" onclick="window.print();" class="no-print inline-block px-3 py-1 rounded bg-indigo-600 text-white text-sm">列印</a>
-          <a href="/" class="no-print text-sm text-indigo-600 hover:underline">回首頁</a>
-        </div>
-      </div>
+      
     </article>
   </main>
 
   <footer class="bg-white mt-8">
     <div class="container mx-auto px-4 py-6 text-xs text-gray-500">
-      © <span id="year"></span> 本平台。若有疑問請至店舖或官網查詢。
+      © <span id="year"></span> 若有疑問請至店舖查詢。
     </div>
   </footer>
 
@@ -98,4 +90,5 @@
   </script>
 </body>
 </html>
+
 
