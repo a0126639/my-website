@@ -8,203 +8,243 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
+    /* =========================================
+       ★ 這裡是尺寸調整區 (新手請改這裡) ★
+       ========================================= */
+    :root {
+      /* 1. 上方導覽列的高度 (建議 50px ~ 80px) */
+      --nav-height: 60px; 
+
+      /* 2. 右側廣告區的寬度 (建議 250px ~ 350px) */
+      --right-sidebar-width: 300px;
+
+      /* 3. 中間內容區的「最小」高度 (若內容很少時的高度) */
+      --content-min-height: 600px;
+    }
+
+    /* 以下是將上面設定應用到網頁的語法，不需要修改 */
+    .custom-nav-height { min-height: var(--nav-height); }
+    .custom-right-width { width: var(--right-sidebar-width); }
+    .custom-main-height { min-height: var(--content-min-height); }
+    
     .prose p { line-height: 1.6; color: #374151; }
-    /* 增加一個 loading 的簡單樣式 */
     .loading { color: #6b7280; font-style: italic; }
+    
+    /* 導覽列按鈕被選中時的樣式 */
+    .nav-active { 
+      border-bottom: 3px solid #4f46e5; /* 底部藍線 */
+      color: #4f46e5; 
+      font-weight: bold;
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
-  <header class="sm:hidden bg-white shadow-sm sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <button id="menu-toggle" class="p-2 rounded-md hover:bg-gray-100">☰</button>
-        <h1 class="text-lg font-semibold">蚤激安寄賣小舖</h1>
-      </div>
-      <div class="text-sm text-gray-600">廣告區</div>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+
+  <header class="sm:hidden bg-white shadow-sm sticky top-0 z-30 flex items-center justify-between px-4 py-2">
+    <div class="flex items-center gap-3">
+      <button id="menu-toggle" class="p-2 rounded-md hover:bg-gray-100">☰</button>
+      <h1 class="text-lg font-semibold">蚤激安寄賣小舖</h1>
     </div>
   </header>
 
-  <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 sm:grid-cols-[220px_1fr_300px] gap-6">
-    <aside id="left-nav" class="bg-white rounded-2xl shadow-sm p-3">
-      <nav id="nav-list" class="space-y-2"></nav>
-      <div class="mt-4 text-xs text-gray-500">提示：點擊「登入」將開啟新視窗。</div>
+  <nav id="top-nav-container" class="hidden sm:block bg-white shadow-sm sticky top-0 z-20 custom-nav-height">
+    <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      <div class="font-bold text-xl mr-8 text-indigo-600">蚤激安</div>
+      
+      <div id="nav-list" class="flex flex-1 gap-4 overflow-x-auto h-full items-center">
+        </div>
+      
+      <div class="text-xs text-gray-500 ml-4 hidden md:block">
+        今日訪客: 102
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 py-6 w-full flex flex-col sm:flex-row gap-6">
+    
+    <aside id="mobile-menu" class="fixed inset-0 z-40 transform -translate-x-full transition-transform duration-300 bg-black/50 sm:hidden">
+       <div class="bg-white w-64 h-full shadow-xl p-4" id="mobile-menu-content">
+         <div class="flex justify-between items-center mb-4">
+           <h2 class="font-bold text-lg">選單</h2>
+           <button id="menu-close" class="text-gray-500 p-1">✕</button>
+         </div>
+         <div id="mobile-nav-list" class="space-y-2 flex flex-col">
+           </div>
+       </div>
     </aside>
 
-    <main id="content" class="bg-white rounded-2xl shadow p-6 min-h-[320px]">
-      <header class="flex items-start justify-between gap-4">
+    <main id="content" class="bg-white rounded-2xl shadow p-6 flex-1 custom-main-height">
+      <header class="flex items-start justify-between gap-4 border-b pb-4 mb-4">
         <div>
           <h2 id="content-title" class="text-2xl font-bold">標題</h2>
           <p id="content-sub" class="text-sm text-gray-500 mt-1">...</p>
         </div>
       </header>
 
-      <section id="content-body" class="mt-6 prose">
+      <section id="content-body" class="prose max-w-none">
         </section>
     </main>
 
-    <aside class="hidden sm:block">
-      <div class="space-y-4 sticky top-6">
-        <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
-          <div class="font-semibold">廣告 / 推廣</div>
-          <p class="mt-2 text-gray-600 text-xs">放置橫幅或聯盟廣告位置。</p>
-          <div class="mt-3 grid gap-3">
-            <div class="border rounded-lg p-3 text-center">廣告 300×250</div>
-            <div class="border rounded-lg p-3 text-center">廣告 300×250</div>
+    <aside class="hidden sm:block custom-right-width flex-shrink-0">
+      <div class="space-y-4 sticky top-20"> <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
+          <div class="font-semibold text-lg mb-2">廣告專區</div>
+          <div class="bg-gray-100 border rounded-lg h-60 flex items-center justify-center text-gray-400">
+             廣告 (300x250)
           </div>
-        </div>
+          </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
-          <div class="font-semibold">推薦內容</div>
-          <ul class="mt-2 text-gray-700 text-sm space-y-2">
-            <li class="hover:text-indigo-600 cursor-pointer">推薦文章 A</li>
-            <li class="hover:text-indigo-600 cursor-pointer">推薦工具 B</li>
+          <div class="font-semibold mb-2">推薦連結</div>
+          <ul class="space-y-2 text-gray-600">
+            <li class="hover:text-indigo-600 cursor-pointer">• 賣場使用教學</li>
+            <li class="hover:text-indigo-600 cursor-pointer">• 運費計算方式</li>
+            <li class="hover:text-indigo-600 cursor-pointer">• 會員權益說明</li>
           </ul>
         </div>
+
       </div>
     </aside>
   </div>
 
-  <footer class="max-w-7xl mx-auto px-4 py-6 text-xs text-gray-500">© <span id="year"></span> 蚤激安寄賣小舖</footer>
+  <footer class="bg-white mt-auto border-t py-6 text-center text-sm text-gray-500">
+    © <span id="year"></span> 蚤激安寄賣小舖 - All Rights Reserved.
+  </footer>
 
   <script>
-    // --- 設定區 ---
-    
-    // 定義選單資料
+    // --- 資料設定 ---
     const links = [
       { 
         id: 'login', 
         label: '登入', 
-        //這是一個外部連結，不是內部頁面
         isExternal: true, 
         url: 'https://www.jljh.com.tw/usedcust/index.php?t=1&npg=' 
       },
       { 
         id: 'announcement', 
         label: '最新公告', 
-        summary: '這裡是最新公告區，內容將從 announcement.html 載入。' 
+        summary: '最新消息與店舖公告。' 
       },
-      { id: 'about', label: '關於我們', summary: '關於本網站的背景故事、團隊或聯絡資訊。' },
-      { id: 'resources', label: '資源', summary: '下載、工具連結或常見問答 (FAQ)。' },
+      { id: 'about', label: '關於我們', summary: '關於本網站的背景故事。' },
+      { id: 'resources', label: '資源下載', summary: '表格下載與常見問題。' },
       { id: 'contact', label: '聯絡我們', summary: '聯絡表單或客服資訊。' },
     ];
 
     const navList = document.getElementById('nav-list');
+    const mobileNavList = document.getElementById('mobile-nav-list');
     const contentTitle = document.getElementById('content-title');
     const contentSub = document.getElementById('content-sub');
     const contentBody = document.getElementById('content-body');
-    const yearSpan = document.getElementById('year');
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-    yearSpan.textContent = new Date().getFullYear();
+    let activeId = 'announcement'; // 預設顯示
 
-    // 設定預設顯示的頁面 (因為首頁變成登入了，所以預設改成顯示最新公告)
-    let activeId = 'announcement';
-
-    // --- 渲染左側選單 ---
+    // --- 產生按鈕 (同時產生桌機版與手機版) ---
     function renderNav() {
       navList.innerHTML = '';
+      mobileNavList.innerHTML = '';
+
       links.forEach(link => {
+        // 1. 建立桌機版按鈕 (橫向)
         const btn = document.createElement('button');
-        btn.className = [
-          'w-full', 'text-left', 'rounded-lg', 'px-3', 'py-2', 'flex', 'items-center', 'justify-between',
-          'focus:outline-none', 'transition-colors'
-        ].join(' ');
-        
-        btn.innerHTML = `<span class="font-medium">${link.label}</span><span class="text-xs text-gray-400">›</span>`;
+        btn.className = 'px-3 py-2 text-sm font-medium transition-all hover:text-indigo-600 h-full border-b-2 border-transparent';
+        btn.textContent = link.label;
 
-        // 樣式判斷：如果是當前頁面且不是外部連結
         if (activeId === link.id && !link.isExternal) {
-          btn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+          btn.classList.add('nav-active');
         } else {
-          btn.classList.add('hover:bg-gray-100', 'text-gray-800');
+          btn.classList.add('text-gray-600');
         }
-
-        // 點擊事件
-        btn.addEventListener('click', () => {
-          if (link.isExternal) {
-            // 如果是外部連結 (登入)，開新視窗
-            window.open(link.url, '_blank');
-          } else {
-            // 如果是內部頁面，切換內容
-            activeId = link.id;
-            updateContent();
-            renderNav(); // 重新渲染按鈕樣式
-            // 手機版點選後自動收合選單
-            if (window.innerWidth < 640) leftNav.classList.remove('translate-x-0');
-          }
-        });
+        
+        // 綁定點擊事件 (桌機)
+        btn.addEventListener('click', () => handleClick(link));
         navList.appendChild(btn);
+
+        // 2. 建立手機版按鈕 (直向)
+        const mBtn = document.createElement('button');
+        mBtn.className = 'w-full text-left px-4 py-3 rounded hover:bg-gray-100 border-b border-gray-100';
+        mBtn.textContent = link.label;
+        if (activeId === link.id && !link.isExternal) mBtn.classList.add('text-indigo-600', 'font-bold', 'bg-gray-50');
+        
+        // 綁定點擊事件 (手機)
+        mBtn.addEventListener('click', () => {
+            handleClick(link);
+            toggleMobileMenu(false); // 點擊後關閉手機選單
+        });
+        mobileNavList.appendChild(mBtn);
       });
     }
 
-    // --- 更新中間內容 ---
+    // --- 處理點擊邏輯 ---
+    function handleClick(link) {
+      if (link.isExternal) {
+        window.open(link.url, '_blank');
+      } else {
+        activeId = link.id;
+        updateContent();
+        renderNav();
+      }
+    }
+
+    // --- 更新內容 ---
     function updateContent() {
       const item = links.find(l => l.id === activeId);
       if (!item) return;
 
       contentTitle.textContent = item.label;
-      contentSub.textContent = '目前顯示：' + item.id;
-      
-      // 清空內容並顯示載入中...
-      contentBody.innerHTML = '<p class="loading">載入中...</p>';
+      contentSub.textContent = '位置：' + item.id;
+      contentBody.innerHTML = '<p class="loading">資料讀取中...</p>';
 
-      // 特別處理：如果是「最新公告」，去抓取 announcement.html
       if (item.id === 'announcement') {
         fetch('announcement.html')
-          .then(response => {
-            if (!response.ok) throw new Error("找不到檔案");
-            return response.text();
+          .then(res => {
+            if(!res.ok) throw new Error('Missing file');
+            return res.text();
           })
-          .then(html => {
-            contentBody.innerHTML = html;
-          })
-          .catch(err => {
-            // 如果抓不到檔案 (例如檔案還沒上傳)，顯示備用文字
-            console.warn('載入失敗:', err);
+          .then(html => contentBody.innerHTML = html)
+          .catch(() => {
             contentBody.innerHTML = `
-              <div class="p-4 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-200">
-                <p><strong>系統提示：</strong>尚未建立 <code>announcement.html</code> 檔案。</p>
-                <p class="text-sm mt-1">請在 GitHub 上傳該檔案，內容就會顯示在這裡。</p>
-                <hr class="my-2 border-yellow-200">
-                <p>${item.summary}</p>
-              </div>
-            `;
+              <div class="p-4 bg-blue-50 text-blue-800 rounded border border-blue-200">
+                尚未建立 announcement.html，請至 GitHub 上傳檔案。<br>
+                <span class="text-xs text-gray-500">(${item.summary})</span>
+              </div>`;
           });
       } else {
-        // 其他頁面顯示預設內容 (這裡維持原本的範例)
+        // 預設假文
         contentBody.innerHTML = `
-          <p>${item.summary}</p>
-          <div class="mt-4 space-y-3">
-            <div class="rounded-lg border p-3 bg-gray-50">
-              <strong>範例區塊：</strong>
-              <p class="text-sm text-gray-600 mt-1">這是 ${item.label} 的預設內容。</p>
-            </div>
+          <p class="text-lg text-gray-700 mb-4">${item.summary}</p>
+          <div class="h-64 bg-gray-100 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+             這裡將顯示 ${item.label} 的詳細內容
           </div>
         `;
       }
     }
 
-    // --- 手機版選單切換 ---
-    const leftNav = document.getElementById('left-nav');
-    document.getElementById('menu-toggle').addEventListener('click', () => {
-      leftNav.classList.toggle('-translate-x-full');
-      leftNav.classList.toggle('translate-x-0');
+    // --- 手機版選單開關 ---
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuContent = document.getElementById('mobile-menu-content');
+
+    function toggleMobileMenu(show) {
+      if (show) {
+        mobileMenu.classList.remove('hidden');
+        // 小延遲讓動畫生效
+        setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10);
+      } else {
+        mobileMenu.classList.add('-translate-x-full');
+        setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+      }
+    }
+
+    document.getElementById('menu-toggle').addEventListener('click', () => toggleMobileMenu(true));
+    document.getElementById('menu-close').addEventListener('click', () => toggleMobileMenu(false));
+    
+    // 點擊黑色遮罩關閉
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target === mobileMenu) toggleMobileMenu(false);
     });
 
     // 初始化
-    leftNav.classList.add('translate-x-0'); 
     renderNav();
-    updateContent(); // 初始載入
-
-    // 點擊外部關閉選單 (手機版)
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth < 640) {
-        const withinNav = e.target.closest('#left-nav') || e.target.closest('#menu-toggle');
-        if (!withinNav) {
-          leftNav.classList.add('-translate-x-full');
-          leftNav.classList.remove('translate-x-0');
-        }
-      }
-    });
+    updateContent();
   </script>
 </body>
 </html>
