@@ -5,45 +5,44 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>最新公告</title>
 
-  <!-- Tailwind Play CDN（方便快速上線） -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* 印刷優化與細部調整 */
+    /* 印刷優化 */
     body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    .container { max-width: 980px; }
     @media print {
       header, footer, .no-print { display: none !important; }
       body { background: white; }
     }
-    /* 簡單排版微調 */
+    /* 列表間距調整 */
     .rule-list li { margin-bottom: 0.6rem; }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
-  <header class="bg-white shadow-sm">
-      <div class="text-sm text-gray-600">
-        <div class="text-sm text-gray-600">最後更新：<span id="updated-date"></span></div>
-      </div>
-      </div>
+<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+
+  <header class="bg-white shadow-sm py-4">
+    <div class="container mx-auto px-4 flex justify-end">
+       <div class="text-sm text-gray-600">最後更新：2025-11-21</div>
+    </div>
   </header>
 
-  <main class="container mx-auto px-4 py-8">
+  <main class="container mx-auto px-4 py-8 flex-grow">
 
-    <section class="prose text-base text-gray-800">
-        <ol class="rule-list list-decimal pl-5">
-          <li>※ 新拒收商品已更新，請各位會員寄賣前請務必確認您的物品是否屬於拒收範圍，以免造成處理成本或直接捐贈、回收處置。
-          <li>※ 下架之商品請盡快取回，逾期將視商品狀況以捐款戶繼續販售或回收。
+    <section class="prose text-base text-gray-800 mb-8">
+        <ol class="rule-list list-decimal pl-5 font-medium text-red-700">
+          <li>※ 新拒收商品已更新，請各位會員寄賣前請務必確認您的物品是否屬於拒收範圍。</li>
+          <li>※ 下架之商品請盡快取回，逾期將視商品狀況以捐款戶繼續販售或回收。</li>
           <li>※ 超過50CM的大型商品暫時停收。</li>
           <li>※ 即日起任何金額取款都需前一天預約。如無法預約日取款，可用LINE告知。</li>
           <li>※ 寄賣會員請注意，店內不寄賣衣服、鞋子，請不要拿來哦！</li>
         </ol>
-      </section>
+    </section>
+
     <article class="bg-white rounded-2xl shadow p-6">
-      <h2 class="text-2xl font-semibold mb-4">寄賣會員服務相關規則</h2>
+      <h2 class="text-2xl font-semibold mb-4 border-b pb-2">寄賣會員服務相關規則</h2>
 
       <section class="prose text-base text-gray-800">
-        <ol class="rule-list list-decimal pl-5">
+        <ol class="rule-list list-decimal pl-5 text-gray-700">
           <li>本平台托售採會員制，入會須配合身份查核，首次託售即代表您已完全了解並同意下列規則。</li>
           <li>會員託售物品的售價，皆由店家制定與調整，價格則因二手市場行情隨時變動。</li>
           <li>店舖為開架式賣場，銷售時將有自然折舊之情形，故託售商品取回不提供折舊賠償。商品上架販售超過半年，店舖將視託售商品狀況決定是否繼續販售或捐贈慈善機構。</li>
@@ -64,14 +63,13 @@
       <hr class="my-6" />
 
       <section>
-        <h3 class="text-lg font-semibold mb-2">重要說明 — 拒收 / 限收商品</h3>
+        <h3 class="text-lg font-semibold mb-2 text-red-600">重要說明 — 拒收 / 限收商品</h3>
         <p class="text-sm text-gray-600 mb-3">
           以下為店家公告之「拒收 / 限收商品」。寄賣前請務必確認您的物品是否屬於拒收範圍，以免造成處理成本或直接捐贈、回收處置。
         </p>
 
-        <!-- 圖片區（請把圖片檔放在同一資料夾並命名為 圖片1.png，或改成你實際檔名） -->
         <div class="bg-gray-50 border rounded-lg p-4 flex justify-center">
-          <img src="docs/00.png" alt="拒收限收商品清單" class="max-w-full h-auto" />
+          <img src="docs/00.png" alt="拒收限收商品清單" class="max-w-full h-auto shadow-sm rounded" />
         </div>
         
       </section>
@@ -79,29 +77,15 @@
     </article>
   </main>
 
-  <footer class="bg-white mt-8">
-    <div class="container mx-auto px-4 py-6 text-xs text-gray-500">
+  <footer class="bg-white border-t mt-8">
+    <div class="container mx-auto px-4 py-6 text-xs text-gray-500 text-center">
       © <span id="year"></span> 蚤激安寄賣小舖 版權所有。
     </div>
   </footer>
 
   <script>
-    // 自動填入日期與年份
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    document.getElementById('updated-date').textContent = `${y}-${m}-${d}`;
-    document.getElementById('year').textContent = y;
+    // 只保留頁尾年份自動更新 (這通常不需要手動改)
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
