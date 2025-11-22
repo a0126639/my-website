@@ -2,7 +2,6 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>蚤激安寄賣小舖</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,30 +10,28 @@
 
   <style>
     /* =========================================
-       ★ 這裡是尺寸調整區 (新手請改這裡) ★
+       ★ 尺寸調整區 ★
        ========================================= */
     :root {
-      /* 1. 上方導覽列的高度 */
       --nav-height: 60px; 
-
-      /* 2. 右側廣告區的寬度 */
       --right-sidebar-width: 300px;
-
-      /* 3. 中間內容區的「最小」高度 */
       --content-min-height: 600px;
+      /* 設定網頁最小寬度，防止版面變形 */
+      --min-page-width: 1024px; 
     }
 
-    /* 以下是將上面設定應用到網頁的語法，不需要修改 */
     .custom-nav-height { min-height: var(--nav-height); }
     .custom-right-width { width: var(--right-sidebar-width); }
     .custom-main-height { min-height: var(--content-min-height); }
     
+    /* 強制網頁有最小寬度 */
+    body { min-width: var(--min-page-width); }
+
     .prose p { line-height: 1.6; color: #374151; }
     .loading { color: #6b7280; font-style: italic; }
     
-    /* 導覽列按鈕被選中時的樣式 */
     .nav-active { 
-      border-bottom: 3px solid #4f46e5; /* 底部藍線 */
+      border-bottom: 3px solid #4f46e5; 
       color: #4f46e5; 
       font-weight: bold;
     }
@@ -42,39 +39,21 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
 
-  <header class="sm:hidden bg-white shadow-sm sticky top-0 z-30 flex items-center justify-between px-4 py-2">
-    <div class="flex items-center gap-3">
-      <button id="menu-toggle" class="p-2 rounded-md hover:bg-gray-100">☰</button>
-      <h1 class="text-lg font-semibold">蚤激安寄賣小舖</h1>
-    </div>
-  </header>
-
-  <nav id="top-nav-container" class="hidden sm:block bg-white shadow-sm sticky top-0 z-20 custom-nav-height">
+  <nav id="top-nav-container" class="bg-white shadow-sm sticky top-0 z-20 custom-nav-height">
     <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-      <div class="font-bold text-xl mr-8 text-indigo-600">蚤激安寄賣小舖</div>
+      <div class="font-bold text-xl mr-8 text-indigo-600 shrink-0">蚤激安寄賣小舖</div>
       
       <div id="nav-list" class="flex flex-1 gap-4 overflow-x-auto h-full items-center">
         </div>
       
-      <div class="text-xs text-gray-500 ml-4 hidden md:block">
-        今日訪客: 102
+      <div class="text-xs text-gray-400 ml-4 shrink-0">
+         歡迎光臨
       </div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-4 py-6 w-full flex flex-col sm:flex-row gap-6">
+  <div class="max-w-7xl mx-auto px-4 py-6 w-full flex gap-6">
     
-    <aside id="mobile-menu" class="fixed inset-0 z-40 transform -translate-x-full transition-transform duration-300 bg-black/50 sm:hidden">
-       <div class="bg-white w-64 h-full shadow-xl p-4" id="mobile-menu-content">
-         <div class="flex justify-between items-center mb-4">
-           <h2 class="font-bold text-lg">選單</h2>
-           <button id="menu-close" class="text-gray-500 p-1">✕</button>
-         </div>
-         <div id="mobile-nav-list" class="space-y-2 flex flex-col">
-           </div>
-       </div>
-    </aside>
-
     <main id="content" class="bg-white rounded-2xl shadow p-6 flex-1 custom-main-height">
       <header class="flex items-start justify-between gap-4 border-b pb-4 mb-4">
         <div>
@@ -86,37 +65,27 @@
         </section>
     </main>
 
-    <aside class="hidden sm:block custom-right-width flex-shrink-0">
+    <aside class="custom-right-width flex-shrink-0">
       <div class="space-y-6 sticky top-20"> 
 
          <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
-          <div class="font-semibold text-gray-400 text-xs mb-2"></div>
-          
+          <div class="font-semibold text-gray-400 text-xs mb-2">贊助廣告</div>
           <div class="bg-gray-50 border border-dashed border-gray-300 rounded-lg w-full h-[250px] flex items-center justify-center text-gray-400 overflow-hidden">
-             
              <div class="text-center px-2">
-               <br><br><br>
-            </br.>
+               Google Ad 區塊
              </div>
-
           </div>
         </div>
         
         <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
-          <div class="font-semibold text-gray-400 text-xs mb-2"></div>
-          
-          <a href="#" target="_blank" class="block group">
-            
-                <a href="docs/CAT.jpg" target="_blank" class="hover:opacity-80 transition-opacity">
-              <img src="docs/CAT.jpg" alt="店內廣告">
+          <div class="font-semibold text-gray-400 text-xs mb-2">店內推薦</div>
+          <a href="#" target="_blank" class="block group hover:opacity-80 transition-opacity">
+              <img src="docs/CAT.jpg" alt="店內廣告" class="w-full h-auto rounded shadow-sm">
           </a>
         </div>
 
-
-
         <div class="bg-white rounded-2xl shadow-sm p-4 text-sm">
           <div class="font-semibold mb-3 border-b pb-2">最近貼文</div>
-          
           <div class="w-full overflow-hidden flex justify-center">
             <iframe 
               src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fpermalink.php%3Fstory_fbid%3Dpfbid02DRULyD5VGhqwobSDcAddT4upuxi6hgEx6GHjyN9Hb7Jn9u6H8RUb6Adfs1HCP6wil%26id%3D61571238674713&show_text=true&width=300" 
@@ -139,6 +108,17 @@
     © <span id="year"></span> 蚤激安寄賣小舖 - All Rights Reserved.
   </footer>
 
+  <div id="floating-ad" class="fixed bottom-4 right-4 z-50 flex flex-col items-end transition-transform duration-300 translate-y-0">
+    <button onclick="closeAd()" class="mb-2 bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center shadow hover:bg-gray-600 text-xs">
+      ✕
+    </button>
+    <a href="https://line.me/R/ti/p/@041ypvvx?oat_content=qr" target="_blank" class="block bg-white p-2 rounded-lg shadow-xl border border-gray-200 hover:scale-105 transition-transform">
+       <div class="w-40 text-center">
+        <p class="text-sm font-bold text-indigo-600">加 LINE 預約</p>
+        </div>
+    </a>
+  </div>
+
   <script>
     // --- 資料設定 ---
     const links = [
@@ -159,9 +139,7 @@
     ];
 
     const navList = document.getElementById('nav-list');
-    const mobileNavList = document.getElementById('mobile-nav-list');
     const contentTitle = document.getElementById('content-title');
-    // 移除了 contentSub 變數
     const contentBody = document.getElementById('content-body');
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -170,12 +148,10 @@
     // --- 產生按鈕 ---
     function renderNav() {
       navList.innerHTML = '';
-      mobileNavList.innerHTML = '';
 
       links.forEach(link => {
-        // 1. 桌機版按鈕
         const btn = document.createElement('button');
-        btn.className = 'px-3 py-2 text-sm font-medium transition-all hover:text-indigo-600 h-full border-b-2 border-transparent';
+        btn.className = 'px-3 py-2 text-sm font-medium transition-all hover:text-indigo-600 h-full border-b-2 border-transparent shrink-0';
         btn.textContent = link.label;
 
         if (activeId === link.id && !link.isExternal) {
@@ -186,18 +162,6 @@
         
         btn.addEventListener('click', () => handleClick(link));
         navList.appendChild(btn);
-
-        // 2. 手機版按鈕
-        const mBtn = document.createElement('button');
-        mBtn.className = 'w-full text-left px-4 py-3 rounded hover:bg-gray-100 border-b border-gray-100';
-        mBtn.textContent = link.label;
-        if (activeId === link.id && !link.isExternal) mBtn.classList.add('text-indigo-600', 'font-bold', 'bg-gray-50');
-        
-        mBtn.addEventListener('click', () => {
-            handleClick(link);
-            toggleMobileMenu(false);
-        });
-        mobileNavList.appendChild(mBtn);
       });
     }
 
@@ -212,15 +176,16 @@
       }
     }
 
-  function updateContent() {
+    // --- 更新內容 ---
+    function updateContent() {
       const item = links.find(l => l.id === activeId);
       if (!item) return;
 
       contentTitle.textContent = item.label;
       contentBody.innerHTML = '<p class="loading">資料讀取中...</p>';
 
-      // ★ 修改重點：這裡增加了 contact 的判斷
-      if (item.id === 'announcement' || item.id === 'about' || item.id === 'rule' || item.id === 'contact') {
+      // 如果是這些頁面，讀取外部 HTML 檔案
+      if (['announcement', 'about', 'rule', 'contact'].includes(item.id)) {
         
         const fileName = item.id + '.html'; 
 
@@ -238,7 +203,7 @@
               </div>`;
           });
       } else {
-        // 資源頁面目前還沒有檔案，維持預設顯示
+        // 其他預設
         contentBody.innerHTML = `
           <p class="text-lg text-gray-700 mb-4">${item.summary}</p>
           <div class="h-64 bg-gray-100 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-gray-400">
@@ -248,81 +213,18 @@
       }
     }
 
-
-    
-    // --- 手機版選單開關 ---
-    const mobileMenu = document.getElementById('mobile-menu');
-    const menuContent = document.getElementById('mobile-menu-content');
-
-    function toggleMobileMenu(show) {
-      if (show) {
-        mobileMenu.classList.remove('hidden');
-        setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10);
-      } else {
-        mobileMenu.classList.add('-translate-x-full');
-        setTimeout(() => mobileMenu.classList.add('hidden'), 300);
-      }
+    // --- 懸浮廣告關閉功能 ---
+    function closeAd() {
+      const ad = document.getElementById('floating-ad');
+      ad.classList.add('translate-y-40', 'opacity-0');
+      setTimeout(() => {
+        ad.classList.add('hidden');
+      }, 300);
     }
-
-    document.getElementById('menu-toggle').addEventListener('click', () => toggleMobileMenu(true));
-    document.getElementById('menu-close').addEventListener('click', () => toggleMobileMenu(false));
-    
-    mobileMenu.addEventListener('click', (e) => {
-      if (e.target === mobileMenu) toggleMobileMenu(false);
-    });
 
     // 初始化
     renderNav();
     updateContent();
   </script>
-
-  <div id="floating-ad" class="fixed bottom-4 right-4 z-50 flex flex-col items-end transition-transform duration-300 translate-y-0">
-    
-    <button onclick="closeAd()" class="mb-2 bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center shadow hover:bg-gray-600 text-xs">
-      ✕
-    </button>
-
-    <a href="https://line.me/R/ti/p/@041ypvvx?oat_content=qr" target="_blank" class="block bg-white p-2 rounded-lg shadow-xl border border-gray-200 hover:scale-105 transition-transform">
-      
-      <div class="w-60 text-center">
-        <p class="text-sm font-bold text-indigo-600 mb-1">加入 LINE 好友</p>
-        <p class="text-xs text-gray-500">預約取款更方便！</p>
-        </div>
-
-    </a>
-  </div>
-
-  <script>
-    // --- 懸浮廣告的控制功能 ---
-    function closeAd() {
-      const ad = document.getElementById('floating-ad');
-      // 加上 translate-y-full 把它往下推出去隱藏
-      ad.classList.add('translate-y-40', 'opacity-0');
-      
-      // 設定一個短暫延遲後完全隱藏 (避免擋到點擊)
-      setTimeout(() => {
-        ad.classList.add('hidden');
-      }, 300);
-    }
-  </script>
-  
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
